@@ -1,0 +1,45 @@
+version: '3.8'
+services:
+  springboot:
+    build: ./PhonicApp-server
+    ports:
+      - "8800:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/phonicapp?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      - python-api
+      - mysql
+
+  python-api:
+    build: ./python-api
+    ports:
+      - "9000:8000"
+    volumes:
+      - ./python-api:/app
+    restart: unless-stopped
+
+  frontend:
+    build: "D:/AndroidStudioProjects/PhonicsApp/phonics-web"
+    ports:
+      - "3000:80"
+    depends_on:
+      - springboot
+      - python-api
+
+  mysql:
+    image: mysql:8.0
+    container_name: phonicapp-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: phonicapp
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:

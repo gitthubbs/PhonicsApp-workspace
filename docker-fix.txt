@@ -1,0 +1,9 @@
+PhonicApp-server:
+1.application.properties:
+port->8080
+sql->3306
+2.PythonApiClient.java:
+PYTHON_API_URL->http://python-api:8000/similarity
+Phonic-web:
+1.UserLogin.vue
+8080
