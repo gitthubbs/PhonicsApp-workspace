@@ -1,8 +1,10 @@
 package com.ray.phonicappserver.controller;
 
+import com.ray.phonicappserver.common.Result;
 import com.ray.phonicappserver.dto.request.LoginRequest;
 import com.ray.phonicappserver.dto.request.RegisterRequest;
 import com.ray.phonicappserver.dto.response.UserResponse;
+import com.ray.phonicappserver.security.JwtUtil;
 import com.ray.phonicappserver.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -15,22 +17,31 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     @PostMapping("/login")
-    public UserResponse login(@RequestBody LoginRequest request) {
+    public Result<UserResponse> login(@RequestBody LoginRequest request) {
         return userService.login(request);
     }
 
-    @GetMapping("/{username}")
-    public UserResponse getUserInfo(@PathVariable String username) {
-        UserResponse response = userService.getUserInfo(username);
-        if (response != null) {
-            return response;
-        }
-        throw new RuntimeException("用户不存在");
+    @GetMapping("/{userId}")
+    public Result<UserResponse> getUserInfo(@PathVariable Long userId) {
+        return userService.getUserInfo(userId);
     }
 
     @PostMapping("/register")
-    public boolean register(@RequestBody RegisterRequest request) {
+    public Result<Boolean> register(@RequestBody RegisterRequest request) {
         return userService.register(request);
+    }
+
+    @GetMapping("/validate")
+    public boolean validateToken(@RequestHeader("Authorization") String token) {
+        if (token != null && token.startsWith("Bearer ")) {
+            String jwt = token.substring(7);
+            String username = jwtUtil.extractUsername(jwt);
+            return jwtUtil.validateToken(jwt, username);
+        }
+        return false;
     }
 }

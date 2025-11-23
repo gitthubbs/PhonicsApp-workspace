@@ -1,14 +1,16 @@
 package com.ray.phonicappserver.security;
 
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
+import java.security.Key;
 import java.util.Date;
 
 @Component
 public class JwtUtil {
 
-    private final String SECRET_KEY = "ray-secret";
+    private final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512);
     private final long EXPIRATION = 1000 * 60 * 60 * 12; // 12小时
 
     public String generateToken(String username) {
@@ -16,7 +18,7 @@ public class JwtUtil {
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
-                .signWith(SignatureAlgorithm.HS512, SECRET_KEY)
+                .signWith(SECRET_KEY)
                 .compact();
     }
 
