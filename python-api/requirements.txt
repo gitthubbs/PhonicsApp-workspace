@@ -1,11 +1,11 @@
 fastapi
 uvicorn
+python-multipart
 numpy<2
 torch==2.2.2+cpu
+torchaudio==2.2.2+cpu
+transformers==4.36.0
 librosa==0.9.2
 soundfile
-resampy
-resemblyzer==0.1.4
-pydub
-fastdtw
 scipy
+jiwer
