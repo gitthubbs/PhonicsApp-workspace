@@ -17,19 +17,29 @@ public class PythonApiClient {
 
     private static final String PYTHON_API_URL = "http://localhost:9000/similarity";
 
-    public String sendToPython(File file1, File file2) throws Exception {
+    public String sendToPython(File file1, String targetText) throws Exception {
         try (CloseableHttpClient client = HttpClients.createDefault()) {
             HttpPost request = new HttpPost(PYTHON_API_URL);
 
             MultipartEntityBuilder builder = MultipartEntityBuilder.create();
             builder.addBinaryBody("file1", file1, ContentType.DEFAULT_BINARY, file1.getName());
-            builder.addBinaryBody("file2", file2, ContentType.DEFAULT_BINARY, file2.getName());
+
+            // 添加目标文本参数
+            if (targetText != null && !targetText.isEmpty()) {
+                builder.addTextBody("target_text", targetText, ContentType.TEXT_PLAIN);
+            }
 
             HttpEntity entity = builder.build();
             request.setEntity(entity);
 
             try (CloseableHttpResponse response = client.execute(request)) {
-                return EntityUtils.toString(response.getEntity());
+                int statusCode = response.getStatusLine().getStatusCode();
+                String responseBody = EntityUtils.toString(response.getEntity());
+
+                if (statusCode != 200) {
+                    throw new RuntimeException("Python API returned " + statusCode + ": " + responseBody);
+                }
+                return responseBody;
             }
         }
     }

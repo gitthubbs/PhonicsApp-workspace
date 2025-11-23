@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 @RestController
 @RequestMapping("/voice")
@@ -15,31 +17,36 @@ public class SimilarityController {
     private final PythonApiClient pythonApiClient;
 
     public SimilarityController(AudioConvertService audioConvertService,
-                                PythonApiClient pythonApiClient) {
+            PythonApiClient pythonApiClient) {
         this.audioConvertService = audioConvertService;
         this.pythonApiClient = pythonApiClient;
     }
 
     @PostMapping("/compare")
     public String compare(@RequestParam("audio1") MultipartFile audio1,
-                          @RequestParam("audio2") MultipartFile audio2) throws Exception {
+            @RequestParam(value = "targetText", required = false) String targetText) {
+        try {
 
-        File temp1 = File.createTempFile("audio1", ".tmp");
-        File temp2 = File.createTempFile("audio2", ".tmp");
+            File temp1 = File.createTempFile("audio1", ".webm");
 
-        audio1.transferTo(temp1);
-        audio2.transferTo(temp2);
+            Files.copy(audio1.getInputStream(), temp1.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-        File wav1 = audioConvertService.convertToWav(temp1);
-        File wav2 = audioConvertService.convertToWav(temp2);
+            System.out.println("Temp1 size: " + temp1.length());
+            System.out.println("Target text: " + targetText);
 
-        String result = pythonApiClient.sendToPython(wav1, wav2);
+            File wav1 = audioConvertService.convertToWav(temp1);
 
-        temp1.delete();
-        temp2.delete();
-        wav1.delete();
-        wav2.delete();
+            String result = pythonApiClient.sendToPython(wav1, targetText);
 
-        return result;
+            temp1.delete();
+            wav1.delete();
+
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            return "{\"error\": \"" + e.getMessage().replace("\"", "'") + "\"}";
+        }
     }
+
 }
